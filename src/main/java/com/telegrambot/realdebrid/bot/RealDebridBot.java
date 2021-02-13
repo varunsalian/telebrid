@@ -28,10 +28,10 @@ public class RealDebridBot extends TelegramLongPollingSessionBot {
         this.botService = botService;
     }
 
-    @Value("${realdebrid.api}")
+    @Value("${realdebrid.username}")
     private String botName;
 
-    @Value("${realdebrid.username}")
+    @Value("${realdebrid.api}")
     private String botApi;
 
     @Override
@@ -49,16 +49,25 @@ public class RealDebridBot extends TelegramLongPollingSessionBot {
             try {
                 String text = update.getMessage().getText();
                 logger.info("Text recieved: {}", text);
-                //use a case instead of if
-                if (OPTION_LOGIN.equals(text)) {
-                    logger.info("Login Request");
-                    botService.login(update, session);
-                } else if (OPTION_MAGNET.equals(text)) {
-                    logger.info("It's a Magnet");
-                    botService.sendMessageToUser(MESSAGE_ENTER_MAGNET_URL, update.getMessage().getChatId().toString());
-                } else {
-                    logger.info("Something else, handle response takes care of this");
-                    botService.handleResponses(update, session);
+                switch (text) {
+                    case OPTION_LOGIN:
+                        logger.info("Login Request");
+                        botService.login(update, session);
+                        break;
+                    case OPTION_MAGNET:
+                        logger.info("It's a Magnet");
+                        if(botService.isLoggedIn(update.getMessage().getFrom().getId().toString())){
+                            logger.info("User has already logged in");
+                            botService.sendMessageToUser(MESSAGE_ENTER_MAGNET_URL, update.getMessage().getChatId().toString());
+                        } else {
+                            logger.info("User not logged in");
+                            botService.sendMessageToUser("Please login to real debrid before performing this action", update.getMessage().getChatId().toString());
+                            botService.login(update, session);
+                        }
+                        break;
+                    default:
+                        logger.info("Something else, handle response takes care of this");
+                        botService.handleResponses(update, session);
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage());

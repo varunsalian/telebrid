@@ -5,5 +5,5 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface UserRepository extends CrudRepository<UserDTO, Integer> {
 
-    public UserDTO getUserDTOByTelegramId(String telegramId);
+    public UserDTO getUserByTelegramId(String telegramId);
 }

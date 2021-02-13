@@ -20,5 +20,6 @@ public interface iBotService {
     void login(Update update, Session session) throws TelegramApiException, InterruptedException, IOException, ConnectionException;
     void sendMessageToUser(String messageText, String chatId) throws TelegramApiException;
     UserDTO saveUser(Update update, Authentication authenticationDTO, Client client);
+    boolean isLoggedIn(String userId);
 
 }

@@ -47,7 +47,7 @@ public class BotService implements iBotService {
     }
     private RealDebridBot realDebridBot;
 
-
+    @Override
     public void saveUpdatesInSession(Update update, Session session) {
         logger.info("Saving update data inside a session:  {}", update);
         if(session != null) {
@@ -64,6 +64,7 @@ public class BotService implements iBotService {
         }
     }
 
+    @Override
     public void handleResponses(Update update, Session session) {
         String previousResponse = getPreviousResponse(session);
         if(previousResponse!=null) {
@@ -79,6 +80,7 @@ public class BotService implements iBotService {
         //TODO: Maybe give an option to user, whether to add a non instantly available magnet and notify when completed
     }
 
+    @Override
     public void handleMagnet(Update update) {
         //check if the magnet URL is valid
         String magnetLink = update.getMessage().getText();
@@ -86,7 +88,10 @@ public class BotService implements iBotService {
             return;
         String hash = getHashFromMagnet(magnetLink);
         if( hash != null) {
-
+            //check for instant availablity
+            //
+        } else {
+            //send a bomb in the message and kill the guy who sent an invalid magnet
         }
     }
 
@@ -100,6 +105,7 @@ public class BotService implements iBotService {
         return hash;
     }
 
+    @Override
     public String getPreviousResponse(Session session) {
         //Get the message from list of updates (size-2), since the current update is also added to the list
         logger.info("Trying to get the previous text");
@@ -114,6 +120,7 @@ public class BotService implements iBotService {
         return previousText;
     }
 
+    @Override
     public void login(Update update, Session session) throws TelegramApiException, InterruptedException, IOException, ConnectionException {
         //Authenticate the user by getting a verification url from Real Debrid
         Authentication authentication = realDebridService.getRDToken();
@@ -122,9 +129,6 @@ public class BotService implements iBotService {
             //Send a message to the user with the verification URL and the code
             String tokenString = USER_INPUT_GOTO + authentication.getVerificationUrl() + USER_INPUT_ENTER_CODE + authentication.getUserCode();
             sendMessageToUser(tokenString, update.getMessage().getChatId().toString());
-            if( session != null) {
-                session.setAttribute("loginPending", true);
-            }
             //Wait for the user to enter the code and submit(5mins max)
             Client client = realDebridService.waitForLogin(authentication);
             if (client != null) {
@@ -140,11 +144,9 @@ public class BotService implements iBotService {
         } else {
             sendMessageToUser("LOGIN FAILED", update.getMessage().getChatId().toString());
         }
-        if( session != null) {
-            session.setAttribute("loginPending", false);
-        }
     }
 
+    @Override
     public void sendMessageToUser(String messageText, String chatId) throws TelegramApiException {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
@@ -152,9 +154,10 @@ public class BotService implements iBotService {
         realDebridBot.execute(sendMessage);
     }
 
+    @Override
     public UserDTO saveUser(Update update, Authentication authenticationDTO, Client client) {
         User user = update.getMessage().getFrom();
-        UserDTO userDTO = userRepository.getUserDTOByTelegramId(user.getId().toString());
+        UserDTO userDTO = userRepository.getUserByTelegramId(user.getId().toString());
         if(userDTO == null) {
             userDTO = UserDTO.UserDTOBuilder.anUserDTO().withTelegramId(user.getId().toString())
                     .withUserName(user.getUserName())
@@ -167,5 +170,10 @@ public class BotService implements iBotService {
             userDTO.setUserName(user.getUserName());
         }
         return userRepository.save(userDTO);
+    }
+
+    @Override
+    public boolean isLoggedIn(String userId) {
+        return userRepository.getUserByTelegramId(userId) != null;
     }
 }
