@@ -58,6 +58,7 @@ public class RealDebridBot extends TelegramLongPollingSessionBot {
                         logger.info("It's a Magnet");
                         if(botService.isLoggedIn(update.getMessage().getFrom().getId().toString())){
                             logger.info("User has already logged in");
+                            setAttributeInSession(session, "magnet", true);
                             botService.sendMessageToUser(MESSAGE_ENTER_MAGNET_URL, update.getMessage().getChatId().toString());
                         } else {
                             logger.info("User not logged in");
@@ -79,6 +80,12 @@ public class RealDebridBot extends TelegramLongPollingSessionBot {
             }
         }).start();
         // The thread will be destroyed once whatever is there within the run method is completed
+    }
+
+    private void setAttributeInSession(Session session,String magnet, Object b) {
+        if(session!=null) {
+            session.setAttribute(magnet, b);
+        }
     }
 
     public String getBotUsername() {

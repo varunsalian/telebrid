@@ -20,7 +20,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static com.telegrambot.realdebrid.common.CommonConstants.*;
 
@@ -66,34 +68,50 @@ public class BotService implements iBotService {
 
     @Override
     public void handleResponses(Update update, Session session) {
-        String previousResponse = getPreviousResponse(session);
-        if(previousResponse!=null) {
-            switch (previousResponse) {
-                //Check if the previous response was magnet
-                case OPTION_MAGNET:
-                    handleMagnet(update);
-                    break;
-                default:
-                    break;
+
+        if(session!=null && session.getAttribute("magnet")!=null && ((Boolean)session.getAttribute("magnet")).equals(Boolean.TRUE)) {
+            try {
+                handleMagnet(update);
+            } catch (IOException | ConnectionException e) {
+                logger.error(e.getMessage());
             }
         }
+
         //TODO: Maybe give an option to user, whether to add a non instantly available magnet and notify when completed
     }
 
     @Override
-    public void handleMagnet(Update update) {
+    public void handleMagnet(Update update) throws IOException, ConnectionException {
         //check if the magnet URL is valid
         String magnetLink = update.getMessage().getText();
+        //TODO: Look for a better way to do it
         if(magnetLink==null || !magnetLink.startsWith("magnet"))
             return;
         String hash = getHashFromMagnet(magnetLink);
+        UserDTO userDTO = userRepository.getUserByTelegramId(update.getMessage().getFrom().getId().toString());
+
         if( hash != null) {
             //check for instant availablity
-            //
+            userDTO = realDebridService.getRDSession(userDTO);
+
+            if(userDTO!=null && userDTO.getToken()!=null && userDTO.getToken().getAccessToken()!=null) {
+                Map<String, Object> availabilityMap = realDebridService.getInstantAvailabilityMapOfHashes(Collections.singletonList(hash), userDTO.getToken().getAccessToken());
+
+                //TODO: Take care during next commit
+                System.out.println(availabilityMap);
+            }
+            else {
+                // Send a message saying something that makes sense
+            }
+            //Add whatever is there in the instant availability map and add it to RD
+
+            //If nothing is available send a message saying its not available
+
         } else {
             //send a bomb in the message and kill the guy who sent an invalid magnet
         }
     }
+
 
     private String getHashFromMagnet(String magnet) {
         String hash = null;

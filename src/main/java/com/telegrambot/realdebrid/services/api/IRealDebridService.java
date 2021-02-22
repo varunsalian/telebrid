@@ -9,6 +9,8 @@ import com.telegrambot.realdebrid.services.dtos.UserDTO;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.List;
+import java.util.Map;
 
 public interface IRealDebridService {
 
@@ -16,7 +18,6 @@ public interface IRealDebridService {
     //AUTHENTICATION RELATED
     Authentication getRDToken()throws IOException, ConnectionException;
     Client waitForLogin(Authentication authenticationDTO) throws InterruptedException, ConnectionException, IOException;
-    UserDTO createRDSession(UserDTO userDTO) throws MalformedURLException, JsonProcessingException;
-
-
+    UserDTO getRDSession(UserDTO userDTO) throws MalformedURLException, JsonProcessingException;
+    Map<String, Object> getInstantAvailabilityMapOfHashes(List<String> hashes, String accessToken)  throws IOException, ConnectionException;
 }

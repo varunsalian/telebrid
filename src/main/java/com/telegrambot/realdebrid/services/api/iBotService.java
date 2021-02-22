@@ -15,7 +15,7 @@ public interface iBotService {
     //public by default
     void saveUpdatesInSession(Update update, Session session);
     void handleResponses(Update update, Session session);
-    void handleMagnet(Update update);
+    void handleMagnet(Update update) throws IOException, ConnectionException;
     String getPreviousResponse(Session session);
     void login(Update update, Session session) throws TelegramApiException, InterruptedException, IOException, ConnectionException;
     void sendMessageToUser(String messageText, String chatId) throws TelegramApiException;
